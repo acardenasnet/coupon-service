@@ -28,3 +28,14 @@ The following property said to spring that can use a dynamically port.
 server.port=0
 ```
 
+To allow register many instances of this services into `consul` we need create a different name to each instance, I'm showing the basic method, but if you will use in a real environment it's good idea use a complex name,
+
+```properties
+spring.cloud.consul.discovery.instance-id=${spring.application.name}:${random.value}
+spring.cloud.consul.discovery.tags=javaDevDayMx2019
+spring.cloud.consul.discovery.prefer-ip-address=true
+spring.cloud.consul.host=localhost
+spring.cloud.consul.port=8500
+```
+
+In the above snippet also added `tags`, and shows the properties used to connect to consul `host` and `port`
