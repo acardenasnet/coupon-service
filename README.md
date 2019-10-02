@@ -16,29 +16,15 @@ mvn sprong-boot:run
 ````
 
 Remember set the name to your project:
-```yaml
-spring:
-    application:
-        name: order-service
+```properties
+spring.application.name=coupon-service
 ```
 
-The name that you use is the name that will use to register in consul, in this branch you only can run one instance of `order-service` at less locally due to by default the port to run the app is `8080`, in the branch `final`,  you will see the configuration complete and you will be able to run many instances of this.
+The name that you use is the name that will use to register in consul, in this branch you only can run one instance of `coupon-service`.
+`coupon-service` is configured to star in a dynamic port, that means that every time could use a different port, with this we can see that `order-service` could call `coupon-service` without knows the real ip and port, due to `consul` will handle that and provide the instances availables registered.
 
-Into the controller can see the following snippet:
-
-```java
-  @Autowired
-  private DiscoveryClient discoveryClient;
-  
-  public Optional<URI> serviceUrl() {
-    return discoveryClient.getInstances("coupon-service")
-        .stream()
-        .map(serviceInstance -> serviceInstance.getUri())
-        .findFirst();
-  }
+The following property said to spring that can use a dynamically port.
+```properties
+server.port=0
 ```
-
-The method above returns all the instances registered in Consul, healthy and unhealthy, in the branch `load_balanced` I will explain how avoid to bring all the instances and only retrieve the healthies
-
-
 
