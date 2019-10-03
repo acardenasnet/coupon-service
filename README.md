@@ -39,3 +39,68 @@ spring.cloud.consul.port=8500
 ```
 
 In the above snippet also added `tags`, and shows the properties used to connect to consul `host` and `port`
+
+In order to use KV consul in our application we should create the KV into consul, you can either use the UI or use the following command:
+
+```shell script
+curl -X PUT http://127.0.0.1:8500/v1/kv/config/application/coupon.code -d '20DISCCOUNT'
+``` 
+
+The command above create the key=`coupon.code` and assign the value=`20DISCCOUNT`.
+
+Now we can modify our code to use the annotation `@Value` to read the KV configuration, like this:
+
+```java
+  @Value("${coupon.code}")
+  private String couponCode;
+```
+
+Then we can compare the coupon received against `couponCode`,
+
+```java
+coupon.equals(couponCode)
+```
+
+At this point the application should works, but if the KV change the value, it'll be not refreshed automatically, you can test changing the value with the same command above to create the KV, just with a different value ( if the key exits will update if not will created )
+
+To solve the issue we need annotate the class with the annotation `@RefreshScope`, this allow update the value of the value injection, that means that will been updated the value.
+
+```java
+@Slf4j
+@RefreshScope
+@RestController
+public class CouponController {
+  ...
+}
+```
+
+With this change you can change the value without restart your service and the changes should be reflected on the fly.
+
+You can see the value of your KV stored in consul using the following command:
+
+```shell script
+curl http://localhost:8500/v1/kv/config/application/coupon.code
+``` 
+
+And will see a result like:
+
+```json
+[
+    {
+        "LockIndex": 0,
+        "Key": "config/application/coupon.code",
+        "Flags": 0,
+        "Value": "MjBESVNDQ09VTlQ=",
+        "CreateIndex": 4488,
+        "ModifyIndex": 4535
+    }
+]
+```
+
+You con see the the value is not plain text, that is good, but we still can read it, using:
+
+```shell script
+echo 'MjBESVNDQ09VTlQ=' |base64 --decode
+```
+
+And yes the answer is, yes the value is encoding on base64.
